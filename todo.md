@@ -39,4 +39,9 @@
 - [x] iPhone viewport testing (390x844)
 - [x] Vitest tests for simulator calculation logic (5 tests passing)
 - [x] Vitest tests for tRPC procedures (6 total tests passing)
-- [ ] Checkpoint save
+- [x] Checkpoint save
+
+## Phase 8: Implementation Guide アクセス制限
+- [x] ナビゲーションから「Implementation Guide」リンクを削除（未ログイン時）
+- [x] ログイン済みMikaのみ /sop ページにアクセス可能（未ログインはログインページへリダイレクト）
+- [x] Profit Simulator・AI Conciergeは公開状態を維持

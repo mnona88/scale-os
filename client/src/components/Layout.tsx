@@ -1,14 +1,21 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/_core/hooks/useAuth";
 
-const navItems = [
+const publicNavItems = [
   { href: "/simulator", label: "Profit Simulator" },
   { href: "/concierge", label: "AI Concierge" },
-  { href: "/sop", label: "Implementation Guide" },
 ];
+
+const adminNavItem = { href: "/sop", label: "Implementation Guide" };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  const navItems = isAuthenticated
+    ? [...publicNavItems, adminNavItem]
+    : publicNavItems;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -47,7 +54,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
 
-            {/* Mobile nav — icon tabs */}
+            {/* Mobile nav */}
             <nav className="flex md:hidden items-center gap-1">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href}>
