@@ -1,6 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Mail } from "lucide-react";
+
+const CONTACT_EMAIL = "m.nonaka@akanon-intl.com";
+const COMPANY_NAME = "A-kanon International";
 
 const publicNavItems = [
   { href: "/simulator", label: "Profit Simulator" },
@@ -52,6 +56,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               ))}
+
+              {/* Contact Button */}
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+                className="ml-2 flex items-center gap-2 px-4 py-2 rounded-md border border-primary text-primary text-sm font-body font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-200 touch-target"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                Contact
+              </a>
             </nav>
 
             {/* Mobile nav */}
@@ -70,6 +83,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </span>
                 </Link>
               ))}
+              {/* Mobile Contact */}
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+                className="p-2 rounded-md text-primary hover:bg-secondary transition-colors touch-target"
+                aria-label="Contact"
+              >
+                <Mail className="h-4 w-4" />
+              </a>
             </nav>
           </div>
         </div>
@@ -81,15 +102,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 py-6">
+      <footer className="border-t border-border/40 py-8">
         <div className="container">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground font-body">
-              © 2025 Scale OS. Serving South Bay business owners.
-            </p>
-            <p className="text-xs text-muted-foreground font-body">
-              Palos Verdes · Torrance · South Bay, California
-            </p>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <p className="font-display text-sm font-medium text-foreground">{COMPANY_NAME}</p>
+              <p className="text-xs text-muted-foreground font-body mt-0.5">
+                Palos Verdes · Torrance · South Bay, California
+              </p>
+            </div>
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary font-body transition-colors"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              {CONTACT_EMAIL}
+            </a>
           </div>
         </div>
       </footer>

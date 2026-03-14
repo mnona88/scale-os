@@ -1,6 +1,8 @@
 import { Link } from "wouter";
-import { ArrowRight, TrendingUp, Clock, Shield } from "lucide-react";
+import { ArrowRight, TrendingUp, Clock, Shield, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const CONTACT_EMAIL = "m.nonaka@akanon-intl.com";
 
 const stats = [
   { value: "$28/hr", label: "True Cost of Admin Staff in California" },
@@ -134,6 +136,30 @@ export default function Home() {
             <p className="font-body text-sm text-muted-foreground mt-6">
               Serving Palos Verdes · Torrance · Redondo Beach · Manhattan Beach
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact CTA */}
+      <section className="border-t border-border/40 bg-card">
+        <div className="container py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="font-body text-xs tracking-widest uppercase text-primary mb-4">A-kanon International</p>
+            <h2 className="font-display text-3xl md:text-4xl font-light text-foreground mb-4">
+              Ready to see what's possible
+              <br />for your business?
+            </h2>
+            <p className="font-body text-sm text-muted-foreground mb-8 leading-relaxed">
+              Schedule a complimentary 15-minute consultation. We'll walk through your numbers and show you exactly where the opportunity is.
+            </p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Consultation Request`}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-md font-body font-medium hover:opacity-90 transition-opacity touch-target"
+            >
+              <Mail className="h-4 w-4" />
+              Get in Touch
+            </a>
+            <p className="font-body text-xs text-muted-foreground mt-4">{CONTACT_EMAIL}</p>
           </div>
         </div>
       </section>

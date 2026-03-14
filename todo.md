@@ -45,3 +45,8 @@
 - [x] ナビゲーションから「Implementation Guide」リンクを削除（未ログイン時）
 - [x] ログイン済みMikaのみ /sop ページにアクセス可能（未ログインはログインページへリダイレクト）
 - [x] Profit Simulator・AI Conciergeは公開状態を維持
+
+## Phase 9: 会社名変更・問い合わせボタン追加
+- [x] フッターの会社名を「A-kanon International」に変更
+- [x] ナビゲーションに「Contact」ボタンを追加（m.nonaka@akanon-intl.comへのmailtoリンク）
+- [x] ホームページのCTAに問い合わせリンクを追加
