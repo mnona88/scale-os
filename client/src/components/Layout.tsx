@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Mail } from "lucide-react";
+import ContactModal from "./ContactModal";
 
 const CONTACT_EMAIL = "m.nonaka@akanon-intl.com";
 const COMPANY_NAME = "A-kanon International";
@@ -16,6 +18,7 @@ const adminNavItem = { href: "/sop", label: "Implementation Guide" };
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
+  const [contactOpen, setContactOpen] = useState(false);
 
   const navItems = isAuthenticated
     ? [...publicNavItems, adminNavItem]
@@ -23,8 +26,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+
       {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/60">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border/60">
         <div className="container">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
@@ -40,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </Link>
 
-            {/* Navigation */}
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
                 <Link key={item.href} href={item.href}>
@@ -57,14 +62,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
 
-              {/* Contact Button */}
-              <a
-                href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+              {/* Contact Button — opens modal */}
+              <button
+                onClick={() => setContactOpen(true)}
                 className="ml-2 flex items-center gap-2 px-4 py-2 rounded-md border border-primary text-primary text-sm font-body font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-200 touch-target"
               >
                 <Mail className="h-3.5 w-3.5" />
                 Contact
-              </a>
+              </button>
             </nav>
 
             {/* Mobile nav */}
@@ -84,13 +89,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
               {/* Mobile Contact */}
-              <a
-                href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+              <button
+                onClick={() => setContactOpen(true)}
                 className="p-2 rounded-md text-primary hover:bg-secondary transition-colors touch-target"
                 aria-label="Contact"
               >
                 <Mail className="h-4 w-4" />
-              </a>
+              </button>
             </nav>
           </div>
         </div>
@@ -111,13 +116,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 Palos Verdes · Torrance · South Bay, California
               </p>
             </div>
-            <a
-              href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Inquiry`}
+            <button
+              onClick={() => setContactOpen(true)}
               className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary font-body transition-colors"
             >
               <Mail className="h-3.5 w-3.5" />
               {CONTACT_EMAIL}
-            </a>
+            </button>
           </div>
         </div>
       </footer>

@@ -50,3 +50,13 @@
 - [x] フッターの会社名を「A-kanon International」に変更
 - [x] ナビゲーションに「Contact」ボタンを追加（m.nonaka@akanon-intl.comへのmailtoリンク）
 - [x] ホームページのCTAに問い合わせリンクを追加
+
+## Phase 10-13: メール送信・AIアポフロー改善
+- [x] Gmail MCPは自動送信不可と判明。Resend APIを代替採用
+- [x] Resend APIヘルパー（server/email.ts）実装
+- [x] Contactボタンをフォームモーダルに変更（名前・電話・メール・メッセージ入力）
+- [x] フォーム送信後にResendでm.nonaka@akanon-intl.comに通知メール送信
+- [x] AIコンシェルジュのシステムプロンプト改善（電話/対面/メールの3択提示）
+- [x] AIがメールアドレスを収集してから確認メールを送信するフロー実装
+- [x] tRPC procedure: contact.submit, contact.sendAppointment
+- [x] Vitest: 8テスト全パス

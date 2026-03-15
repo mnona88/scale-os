@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, TrendingUp, Clock, Shield, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ContactModal from "@/components/ContactModal";
 
 const CONTACT_EMAIL = "m.nonaka@akanon-intl.com";
 
@@ -35,8 +37,11 @@ const features = [
 ];
 
 export default function Home() {
+  const [contactOpen, setContactOpen] = useState(false);
+
   return (
     <div className="page-enter">
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div
@@ -152,13 +157,13 @@ export default function Home() {
             <p className="font-body text-sm text-muted-foreground mb-8 leading-relaxed">
               Schedule a complimentary 15-minute consultation. We'll walk through your numbers and show you exactly where the opportunity is.
             </p>
-            <a
-              href={`mailto:${CONTACT_EMAIL}?subject=Scale OS Consultation Request`}
+            <button
+              onClick={() => setContactOpen(true)}
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-md font-body font-medium hover:opacity-90 transition-opacity touch-target"
             >
               <Mail className="h-4 w-4" />
               Get in Touch
-            </a>
+            </button>
             <p className="font-body text-xs text-muted-foreground mt-4">{CONTACT_EMAIL}</p>
           </div>
         </div>

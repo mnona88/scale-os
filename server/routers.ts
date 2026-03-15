@@ -6,6 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { saveSimulationResult, getSimulationByToken, updateSimulationEmail } from "./db";
+import { sendContactNotification, sendAppointmentConfirmation } from "./email";
 
 export const appRouter = router({
   system: systemRouter,
@@ -31,8 +32,6 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { adminStaff, hoursPerWeek, businessType, loadedHourlyRate } = input;
 
-        // California labor cost calculation
-        // AI automation typically recaptures 60-75% of manual admin hours
         const automationRate = 0.68;
         const weeksPerYear = 52;
 
@@ -40,13 +39,11 @@ export const appRouter = router({
         const hoursFreedPerYear = Math.round(totalHoursPerYear * automationRate);
         const annualSavings = Math.round(hoursFreedPerYear * loadedHourlyRate);
 
-        // Scale OS monthly investment (mid-tier plan)
         const monthlyInvestment = 3000;
         const annualInvestment = monthlyInvestment * 12;
         const netSavings = annualSavings - annualInvestment;
         const roiPercent = Math.round((netSavings / annualInvestment) * 100);
 
-        // Monthly projection for chart (ramp-up curve)
         const monthlyProjection = Array.from({ length: 12 }, (_, i) => {
           const rampFactor = Math.min(1, 0.4 + (i * 0.06));
           return {
@@ -57,7 +54,6 @@ export const appRouter = router({
           };
         });
 
-        // Time breakdown for donut chart
         const timeBreakdown = [
           { name: "Reclaimed for Growth", value: hoursFreedPerYear, fill: "var(--color-chart-1)" },
           { name: "Remaining Manual Work", value: Math.round(totalHoursPerYear * (1 - automationRate)), fill: "var(--color-chart-4)" },
@@ -113,6 +109,34 @@ export const appRouter = router({
       }),
   }),
 
+  // ── Contact Form ──────────────────────────────────────────────────────────
+  contact: router({
+    submit: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        businessName: z.string().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await sendContactNotification(input);
+        return { success: true };
+      }),
+
+    sendAppointment: publicProcedure
+      .input(z.object({
+        prospectName: z.string().min(1),
+        prospectEmail: z.string().email(),
+        contactMethod: z.enum(["phone", "in-person", "email"]),
+        businessType: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await sendAppointmentConfirmation(input);
+        return { success: true };
+      }),
+  }),
+
   // ── 24/7 AI Concierge ─────────────────────────────────────────────────────
   concierge: router({
     chat: publicProcedure
@@ -147,12 +171,20 @@ Key facts you know:
 - Typical client result: 60–70% reduction in administrative labor costs within 90 days
 - Scale OS investment: $2,000–$4,000/month depending on scope
 - ROI is typically 3–5x in the first year
+- Mika Nonaka at A-kanon International (m.nonaka@akanon-intl.com) is the advisor who will follow up
 
-How to respond:
-1. First, acknowledge the owner's specific pain point with genuine empathy
-2. Briefly quantify the hidden cost they may not be seeing
-3. Explain ONE specific Scale OS solution that directly addresses their concern
-4. End with a clear, low-pressure next step (e.g., "Would you like to see what this looks like for your specific numbers?")
+Appointment booking flow — follow this EXACTLY when the conversation naturally reaches a point where the owner expresses interest in learning more or taking next steps:
+
+STEP 1: Ask how they prefer to connect:
+"I'd love to set up a complimentary 15-minute consultation for you. What works best — a quick phone call, meeting in person here in the South Bay, or would you prefer I send you some information by email first?"
+
+STEP 2: After they choose, ask for their email:
+"Perfect. Could I get your email address so we can confirm the details and send you a summary?"
+
+STEP 3: Once you have their email, confirm:
+"Wonderful. I'll have Mika reach out to confirm everything. You'll receive a confirmation email shortly. Looking forward to showing you what's possible for your business."
+
+IMPORTANT: Never say you will send an email or invitation unless the user has provided their email address in this conversation. Only after they share their email should you confirm that a message will be sent.
 
 Keep responses concise — 3 to 5 sentences maximum. This is a live demo conversation.`;
 

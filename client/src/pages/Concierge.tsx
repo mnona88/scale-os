@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Mic, MicOff, RotateCcw } from "lucide-react";
+import { Send, Mic, MicOff, RotateCcw, Phone, Users, Mail, CheckCircle } from "lucide-react";
 import { Streamdown } from "streamdown";
 
 const businessTypes = [
@@ -27,6 +27,14 @@ type Message = {
   content: string;
 };
 
+type AppointmentStep = "idle" | "choose-method" | "collect-email" | "collect-name" | "confirmed";
+
+const CONTACT_METHODS = [
+  { value: "phone" as const, label: "Phone Call", icon: Phone, description: "Quick 15-min call" },
+  { value: "in-person" as const, label: "Meet In Person", icon: Users, description: "South Bay location" },
+  { value: "email" as const, label: "Email Follow-up", icon: Mail, description: "At your own pace" },
+];
+
 export default function Concierge() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -35,19 +43,44 @@ export default function Concierge() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
+  // Appointment flow state
+  const [apptStep, setApptStep] = useState<AppointmentStep>("idle");
+  const [apptMethod, setApptMethod] = useState<"phone" | "in-person" | "email" | null>(null);
+  const [apptEmail, setApptEmail] = useState("");
+  const [apptName, setApptName] = useState("");
+
   const chat = trpc.concierge.chat.useMutation({
     onSuccess: (data) => {
       const content = typeof data.content === "string" ? data.content : String(data.content);
       setMessages((prev) => [...prev, { role: "assistant", content }]);
+
+      // Detect when AI is ready to book an appointment
+      const lower = content.toLowerCase();
+      if (
+        apptStep === "idle" &&
+        (lower.includes("phone call") || lower.includes("in-person") || lower.includes("email first")) &&
+        (lower.includes("works best") || lower.includes("prefer") || lower.includes("consultation"))
+      ) {
+        setTimeout(() => setApptStep("choose-method"), 600);
+      }
     },
     onError: () => {
       toast.error("Connection issue. Please try again.");
     },
   });
 
+  const sendAppointment = trpc.contact.sendAppointment.useMutation({
+    onSuccess: () => {
+      setApptStep("confirmed");
+    },
+    onError: () => {
+      toast.error("Could not send confirmation. Please contact m.nonaka@akanon-intl.com directly.");
+    },
+  });
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, chat.isPending]);
+  }, [messages, chat.isPending, apptStep]);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -103,6 +136,40 @@ export default function Concierge() {
   const resetConversation = () => {
     setMessages([]);
     setInput("");
+    setApptStep("idle");
+    setApptMethod(null);
+    setApptEmail("");
+    setApptName("");
+  };
+
+  const handleMethodSelect = (method: "phone" | "in-person" | "email") => {
+    setApptMethod(method);
+    setApptStep("collect-email");
+    const methodLabel = CONTACT_METHODS.find(m => m.value === method)?.label ?? method;
+    setMessages(prev => [...prev, { role: "user", content: `I'd prefer ${methodLabel}.` }]);
+  };
+
+  const handleEmailSubmit = () => {
+    if (!apptEmail || !/\S+@\S+\.\S+/.test(apptEmail)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    setMessages(prev => [...prev, { role: "user", content: apptEmail }]);
+    setApptStep("collect-name");
+  };
+
+  const handleNameSubmit = () => {
+    if (!apptName.trim()) {
+      toast.error("Please enter your name.");
+      return;
+    }
+    setMessages(prev => [...prev, { role: "user", content: apptName }]);
+    sendAppointment.mutate({
+      prospectName: apptName,
+      prospectEmail: apptEmail,
+      contactMethod: apptMethod!,
+      businessType,
+    });
   };
 
   return (
@@ -223,6 +290,105 @@ export default function Concierge() {
                   </div>
                 </div>
               )}
+
+              {/* ── Appointment Flow Cards ── */}
+              {apptStep === "choose-method" && (
+                <div className="flex justify-start">
+                  <div className="ql-card p-5 max-w-sm w-full">
+                    <p className="font-body text-xs text-muted-foreground uppercase tracking-widest mb-3">How would you like to connect?</p>
+                    <div className="space-y-2">
+                      {CONTACT_METHODS.map((method) => {
+                        const Icon = method.icon;
+                        return (
+                          <button
+                            key={method.value}
+                            onClick={() => handleMethodSelect(method.value)}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border hover:border-primary hover:bg-accent/30 transition-all duration-150 touch-target text-left"
+                          >
+                            <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center flex-shrink-0">
+                              <Icon className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-body text-sm font-medium text-foreground">{method.label}</p>
+                              <p className="font-body text-xs text-muted-foreground">{method.description}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {apptStep === "collect-email" && (
+                <div className="flex justify-start">
+                  <div className="ql-card p-5 max-w-sm w-full">
+                    <p className="font-body text-sm text-foreground mb-3">
+                      Could I get your email address to confirm the details?
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        placeholder="your@email.com"
+                        value={apptEmail}
+                        onChange={(e) => setApptEmail(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
+                        className="flex-1 px-3 py-2 bg-background border border-border rounded-md font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                        autoFocus
+                      />
+                      <Button size="sm" onClick={handleEmailSubmit} className="font-body">
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {apptStep === "collect-name" && (
+                <div className="flex justify-start">
+                  <div className="ql-card p-5 max-w-sm w-full">
+                    <p className="font-body text-sm text-foreground mb-3">
+                      And your name, so Mika can address you personally?
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={apptName}
+                        onChange={(e) => setApptName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+                        className="flex-1 px-3 py-2 bg-background border border-border rounded-md font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleNameSubmit}
+                        disabled={sendAppointment.isPending}
+                        className="font-body"
+                      >
+                        {sendAppointment.isPending ? (
+                          <span className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
+                        ) : "Confirm"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {apptStep === "confirmed" && (
+                <div className="flex justify-start">
+                  <div className="ql-card p-5 max-w-sm w-full">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                      <p className="font-body text-sm font-medium text-foreground">Confirmation sent</p>
+                    </div>
+                    <p className="font-body text-xs text-muted-foreground leading-relaxed">
+                      A confirmation has been sent to <strong>{apptEmail}</strong>. Mika will be in touch shortly to confirm your appointment.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -241,6 +407,7 @@ export default function Concierge() {
                 placeholder="Ask about your margins, staffing costs, or how automation works..."
                 className="font-body text-sm resize-none min-h-[48px] max-h-32 pr-4 touch-target"
                 rows={1}
+                disabled={apptStep !== "idle" && apptStep !== "confirmed"}
               />
             </div>
 
@@ -249,6 +416,7 @@ export default function Concierge() {
               variant="outline"
               size="icon"
               onClick={toggleVoice}
+              disabled={apptStep !== "idle" && apptStep !== "confirmed"}
               className={`flex-shrink-0 touch-target bg-card h-12 w-12 ${isRecording ? "border-destructive text-destructive recording-pulse" : ""}`}
               title={isRecording ? "Stop recording" : "Speak your question"}
             >
@@ -258,7 +426,7 @@ export default function Concierge() {
             {/* Send Button */}
             <Button
               onClick={() => sendMessage(input)}
-              disabled={!input.trim() || chat.isPending}
+              disabled={!input.trim() || chat.isPending || (apptStep !== "idle" && apptStep !== "confirmed")}
               size="icon"
               className="flex-shrink-0 touch-target h-12 w-12"
             >
